@@ -3,17 +3,23 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "serve": "vue-cli-service serve",
+    "dev": "vue-cli-service serve",
     "build": "vue-cli-service build"
   },
   "dependencies": {
+    "@antv/x6": "^1.1.2",
+    "element-ui": "^2.14.1",
+    "rxjs": "^6.6.3",
     "vue": "^2.6.11",
     "vue-class-component": "^7.2.3",
+    "vue-context": "^6.0.0",
     "vue-property-decorator": "^8.4.2"
   },
   "devDependencies": {
     "@vue/cli-plugin-typescript": "~4.5.0",
     "@vue/cli-service": "~4.5.0",
+    "less": "^3.12.2",
+    "less-loader": "^7.1.0",
     "typescript": "~3.9.3",
     "vue-template-compiler": "^2.6.11"
   }
