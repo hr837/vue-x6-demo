@@ -1,34 +1,38 @@
 <template>
   <section id="app">
-    <widget-box-dnd />
+    <widget-box />
     <div class="wrapper">
-      <tools-box />
-      <div id="container"></div>
+      <div class="tools-container">
+        <tools-box @reset="onReset" />
+        <el-button type="primary" @click="onSave">保存</el-button>
+      </div>
+      <div id="container" ref="container"></div>
     </div>
   </section>
 </template>
 
 <script lang="ts">
-import { Cell, Graph, Shape } from "@antv/x6";
+import { Cell, FunctionExt, Graph, Shape } from "@antv/x6";
 import { Component, Vue } from "vue-property-decorator";
 import FlowChartService, { Customer } from "./utils/flowchart.serivce";
 import ToolsBox from "./components/ToolsBox.vue";
-import StencilBox from "./components/StencilBox.vue";
 import WidgetBox from "./components/WidgetBox.vue";
-import WidgetBoxDnd from "./components/WidgetBox-Ddn.vue";
 import DragService, { CrateNodeInfo } from "./utils/drag.service";
 import { CustomerCellTyle } from "./utils/type";
+import { PortManager } from "@antv/x6/lib/model/port";
 
 @Component({
   components: {
     ToolsBox,
-    StencilBox,
     WidgetBox,
-    WidgetBoxDnd,
   },
 })
 export default class App extends Vue {
   private graph!: Graph;
+
+  readonly $refs!: {
+    container: HTMLDivElement;
+  };
 
   private option = {
     grid: {
@@ -39,27 +43,50 @@ export default class App extends Vue {
       enabled: true,
       sharp: true,
     },
+    connecting: {
+      anchor: "center",
+      connectionPoint: "anchor",
+      dangling: false,
+      highlight: true,
+      snap: true,
+      createEdge() {
+        return new Shape.Edge({
+          attrs: {
+            line: {
+              stroke: "#5F95FF",
+              strokeWidth: 1,
+              targetMarker: {
+                name: "classic",
+                size: 8,
+              },
+            },
+          },
+          router: {
+            name: "manhattan",
+          },
+        });
+      },
+      validateConnection(data: any) {
+        const { sourceView, targetView, sourceMagnet, targetMagnet } = data;
+        if (sourceView === targetView) {
+          return false;
+        }
+        if (!sourceMagnet) {
+          return false;
+        }
+        if (!targetMagnet) {
+          return false;
+        }
+        return true;
+      },
+    },
   };
 
   public mounted() {
-    const container = document.querySelector("#container") as HTMLDivElement;
-    new FlowChartService(container, this.option);
+    new FlowChartService(this.$refs.container, this.option);
     this.graph = FlowChartService.graph;
     this.initDefaultNode();
-    // DragService.registerAddNodeHandle().subscribe((data: CrateNodeInfo) => {
-    //   const { clientX, clientY, cellType } = data;
-
-    //   const x = clientX - container.offsetLeft;
-    //   const y = clientY - container.offsetTop;
-
-    //   if (x < 0 || y < 0) return;
-
-    //   switch (cellType) {
-    //     case "rect":
-    //       this.addRect(x, y);
-    //       break;
-    //   }
-    // });
+    this.initEvent();
   }
 
   private initDefaultNode() {
@@ -78,23 +105,65 @@ export default class App extends Vue {
           rx: 20,
         },
       },
+      ports: {
+        groups: {
+          out: {
+            position: "bottom",
+            attrs: {
+              circle: {
+                r: 3,
+                magnet: true,
+                strokeWidth: 1,
+                fill: "#fff",
+                style: {
+                  visibility: "hidden",
+                },
+              },
+            },
+          },
+        },
+        items: [
+          {
+            id: "start-port",
+            group: "out",
+          },
+        ],
+      },
     });
     this.graph.addNode(node);
   }
 
-  private addRect(x: number, y: number) {
-    const node = new Shape.Rect({
-      width: 100,
-      height: 40,
-      x,
-      y,
-      attrs: {
-        label: {
-          text: "Hello",
-        },
-      },
+  private initEvent() {
+    this.graph.on("blank:click", () => {
+      const ports: NodeListOf<SVGElement> = document.querySelectorAll(
+        ".x6-port-body"
+      );
+      ports.forEach((x) => (x.style.visibility = "hidden"));
     });
-    this.graph.addNode(node);
+    this.graph.on(
+      "node:click",
+      ({ node }) => {
+        if (!node.ports) return;
+        const item = document.querySelector(`g[data-cell-id="${node.id}"]`);
+        if (!item) return;
+        const ports: NodeListOf<SVGElement> = item.querySelectorAll(
+          ".x6-port-body"
+        );
+        ports.forEach((x) => (x.style.visibility = "visible"));
+      },
+      500
+    );
+  }
+
+  private onReset() {
+    FlowChartService.graph.clearCells();
+    this.initDefaultNode();
+    FlowChartService.historyManage.clean();
+  }
+
+  private onSave() {
+    const data = FlowChartService.graph.toJSON();
+    console.log(data);
   }
 }
 </script>
@@ -123,6 +192,10 @@ body {
     flex: 1;
     border: solid 1px #eee;
     box-shadow: 0 4px 12px 0 rgba(114, 211, 179, 0.219);
+  }
+  .tools-container {
+    display: flex;
+    justify-content: space-between;
   }
 }
 </style>

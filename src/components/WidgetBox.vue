@@ -8,6 +8,7 @@ import FlowChartService from "@/utils/flowchart.serivce";
 import { Dnd } from "@antv/x6/lib/addon";
 import { Shape, Addon } from "@antv/x6";
 import { Component, Prop, Vue } from "vue-property-decorator";
+import { FlowChartRect } from "@/utils/shape";
 
 @Component({
   name: "widget-box",
@@ -38,98 +39,36 @@ export default class WidgetBox extends Vue {
     stencilContainer?.appendChild(this._stencil.container);
   }
 
-  private portSetting = {
-    groups: {
-      top: {
-        position: "top",
-        attrs: {
-          circle: {
-            r: 3,
-            magnet: true,
-            stroke: "#5F95FF",
-            strokeWidth: 1,
-            fill: "#fff",
-            style: {
-              visibility: "hidden",
-            },
-          },
-        },
-      },
-      right: {
-        position: "right",
-        attrs: {
-          circle: {
-            r: 3,
-            magnet: true,
-            stroke: "#5F95FF",
-            strokeWidth: 1,
-            fill: "#fff",
-            style: {
-              visibility: "hidden",
-            },
-          },
-        },
-      },
-      bottom: {
-        position: "bottom",
-        attrs: {
-          circle: {
-            r: 3,
-            magnet: true,
-            stroke: "#5F95FF",
-            strokeWidth: 1,
-            fill: "#fff",
-            style: {
-              visibility: "hidden",
-            },
-          },
-        },
-      },
-      left: {
-        position: "left",
-        attrs: {
-          circle: {
-            r: 3,
-            magnet: true,
-            stroke: "#5F95FF",
-            strokeWidth: 1,
-            fill: "#fff",
-            style: {
-              visibility: "hidden",
-            },
-          },
-        },
-      },
-    },
-    items: [
-      {
-        group: "top",
-      },
-      {
-        group: "right",
-      },
-      {
-        group: "bottom",
-      },
-      {
-        group: "left",
-      },
-    ],
-  };
-
   private initShape() {
-    const r1 = new Shape.Rect({
-      width: 100,
-      height: 40,
+    const end = new FlowChartRect({
+      attrs: {
+        body: {
+          stroke: "",
+          rx: 24,
+          ry: 24,
+          fill: "#f93e3e",
+        },
+        text: {
+          text: "结束节点",
+          fill: "white",
+        },
+      },
+      ports: {
+        items: [
+          {
+            group: "top",
+          },
+        ],
+      },
+    });
+    const r2 = new FlowChartRect({
       attrs: {
         text: {
           text: "流程节点",
         },
       },
-      ports: this.portSetting,
     });
-
-    const r2 = new Shape.Rect({
+    const r3 = new FlowChartRect({
       width: 52,
       height: 52,
       angle: 45,
@@ -144,8 +83,57 @@ export default class WidgetBox extends Vue {
           transform: "rotate(-45deg)",
         },
       },
+      ports: {
+        groups: {
+          top: {
+            position: {
+              name: "top",
+              args: {
+                dx: -26,
+              },
+            },
+          },
+          right: {
+            position: {
+              name: "right",
+              args: {
+                dy: -26,
+              },
+            },
+          },
+          bottom: {
+            position: {
+              name: "bottom",
+              args: {
+                dx: 26,
+              },
+            },
+          },
+          left: {
+            position: {
+              name: "left",
+              args: {
+                dy: 26,
+              },
+            },
+          },
+        },
+      },
     });
-    this._stencil.load([r1, r2], "basic");
+    const r4 = new FlowChartRect({
+      width: 70,
+      height: 70,
+      attrs: {
+        body: {
+          rx: 35,
+          ry: 35,
+        },
+        text: {
+          text: "链接节点",
+        },
+      },
+    });
+    this._stencil.load([end, r2, r3, r4], "basic");
   }
 }
 </script>
